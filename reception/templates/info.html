@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Privé</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  
+</head>
+<body>
+
+    <div id="user-list">
+        <h2>Liste des utilisateurs</h2>
+        <ul>
+            {% for user in users %}
+                <li><a href="{% url 'info' user.username %}">{{ user.username }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <div id="private-chat">
+        <h2>Chat Privé avec {{ selected_user.username }}</h2>
+        <div id="private-chat-log">
+            {% for message in messages %}
+                {% if forloop.first or not forloop.prevuser or forloop.prevuser != message.user.username %}
+                    <div class="private-chat-message-group">
+                        <div class="private-chat-username">{{ message.user.username }} :</div>
+                {% endif %}
+                        <div class="private-chat-message">
+                            <span class="content">{{ message.content }}</span>
+                        </div>
+                {% if forloop.last or forloop.nextuser != message.user.username %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <input id="private-chat-message-input" type="text" size="100"><br>
+        <button id="private-chat-message-submit">Envoyer</button>
+    </div>
+    
+    
+    
+<script>
+    const privateChatSocket = new WebSocket('ws://' + window.location.host + '/ws/private_chat/{{ selected_user.username }}/');
+
+    privateChatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const chatLog = document.querySelector('#private-chat-log');
+
+        // Créer un nouvel élément de message
+        const newMessage = document.createElement('div');
+        newMessage.classList.add('private-chat-message');
+
+        // Séparer le nom d'utilisateur et le message
+        const messageParts = data.message.split(":");
+
+        if (messageParts.length >= 2) {
+            const username = messageParts[0].trim();
+            const messageContent = messageParts.slice(1).join(":").trim();  // Tout après le premier ":" est le message
+
+            // Créer un élément pour le contenu du message
+            newMessage.innerHTML = `<span class="content">${messageContent}</span>`;
+
+            // Trouver le dernier groupe de messages dans le chat
+            const lastGroup = chatLog.lastElementChild;
+
+            // Si l'utilisateur est le même que dans le dernier groupe, ajouter le message sans réafficher le nom
+            if (lastGroup && lastGroup.querySelector('.private-chat-username').textContent.includes(username)) {
+                lastGroup.appendChild(newMessage);
+            } else {
+                // Créer un nouveau groupe pour un nouvel utilisateur ou si l'utilisateur change
+                const newGroup = document.createElement('div');
+                newGroup.classList.add('private-chat-message-group');
+                newGroup.innerHTML = `<div class="private-chat-username">${username} :</div>`;  // Ajouter ":" à côté du nom
+                newGroup.appendChild(newMessage);
+                chatLog.appendChild(newGroup);
+            }
+
+            // Faire défiler le chat vers le bas
+            chatLog.scrollTop = chatLog.scrollHeight;
+        } else {
+            console.error("Le format du message est incorrect :", data.message);
+        }
+    };
+
+    privateChatSocket.onclose = function(e) {
+        console.error('Private chat socket closed unexpectedly');
+    };
+
+    document.querySelector('#private-chat-message-input').focus();
+    document.querySelector('#private-chat-message-input').onkeyup = function(e) {
+        if (e.keyCode === 13) {
+            document.querySelector('#private-chat-message-submit').click();
+        }
+    };
+
+    document.querySelector('#private-chat-message-submit').onclick = function(e) {
+        const messageInputDom = document.querySelector('#private-chat-message-input');
+        const message = messageInputDom.value;
+        if (message.trim() !== '') {
+            privateChatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            messageInputDom.value = '';  // Vider le champ après l'envoi
+        }
+    };
+</script>
+
+</body>
+</html>

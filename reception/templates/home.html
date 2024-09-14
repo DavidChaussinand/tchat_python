@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accueil</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-
 
     <header>
         <nav>
@@ -15,7 +16,7 @@
                 <li><a href="demande/">Contact</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="/logout">Déconnexion</a></li>
-                    <li><a href="/profile">Gérer le compte  {{ user.username }}</a></li> <!-- Lien vers le profil de l'utilisateur -->
+                    <li><a href="/profile">Gérer le compte  {{ user.username }}</a></li>
                 {% else %}
                     <li><a href="/connexion">Connexion</a></li>
                     <li><a href="inscription/">Inscription</a></li>
@@ -29,45 +30,95 @@
         <h1>Bienvenue sur la page d'accueil</h1>
     {% endif %}
 
-
     <!-- Section pour le chat -->
     <div id="chat">
-        <h2>Chat en direct</h2>
-        <textarea id="chat-log" cols="100" rows="20" readonly></textarea><br>
+        <h2>Chat Général</h2>
+        <div id="chat-log">
+            {% with None as prev_user %}
+            {% for message in general_messages %}
+                {% if prev_user != message.user.username %}
+                    <div class="message-group">
+                        <div class="username">{{ message.user.username }}</div>
+                {% endif %}
+                        <div class="message">
+                            <span class="content">{{ message.content }}</span>
+                        </div>
+                {% if forloop.last or prev_user != message.user.username %}
+                    </div> <!-- Ferme la div message-group quand l'utilisateur change ou c'est le dernier message -->
+                {% endif %}
+                {% with message.user.username as prev_user %}
+                {% endwith %}
+            {% endfor %}
+        {% endwith %}
+        </div>
         <input id="chat-message-input" type="text" size="100"><br>
         <button id="chat-message-submit">Envoyer</button>
     </div>
 
-    <script>
-        const chatSocket = new WebSocket(
-            'ws://' + window.location.host + '/ws/chat/');
+<script>
+    const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/');
 
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += (data.message + '\n');
-        };
+chatSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    const chatLog = document.querySelector('#chat-log');
+    
+    // Créer un nouvel élément de message
+    const newMessage = document.createElement('div');
+    newMessage.classList.add('message');
 
-        chatSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
-        };
+    // Séparer le nom d'utilisateur et le message
+    const messageParts = data.message.split(":");
 
-        document.querySelector('#chat-message-input').focus();
-        document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.keyCode === 13) {  // Touche Entrée
-                document.querySelector('#chat-message-submit').click();
-            }
-        };
+    if (messageParts.length >= 2) {
+        const username = messageParts[0].trim();
+        const messageContent = messageParts.slice(1).join(":").trim();  // Tout après le premier ":" est le message
 
-        document.querySelector('#chat-message-submit').onclick = function(e) {
-            const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
-            chatSocket.send(JSON.stringify({
-                'message': '{{ user.username }}: ' + message
-            }));
-            messageInputDom.value = '';
-        };
-    </script>
+        // Créer un élément pour le contenu du message
+        newMessage.innerHTML = `<span class="content">${messageContent}</span>`;
 
+        // Trouver le dernier groupe de messages dans le chat
+        const lastGroup = chatLog.lastElementChild;
+
+        // Si l'utilisateur est le même que dans le dernier groupe, ajouter le message sans réafficher le nom
+        if (lastGroup && lastGroup.querySelector('.username').textContent.includes(username)) {
+            lastGroup.appendChild(newMessage);
+        } else {
+            // Créer un nouveau groupe pour un nouvel utilisateur ou si l'utilisateur change
+            const newGroup = document.createElement('div');
+            newGroup.classList.add('message-group');
+            newGroup.innerHTML = `<div class="username">${username} :</div>`;  // Ajouter ":" à côté du nom
+            newGroup.appendChild(newMessage);
+            chatLog.appendChild(newGroup);
+        }
+
+        // Faire défiler le chat vers le bas
+        chatLog.scrollTop = chatLog.scrollHeight;
+    } else {
+        console.error("Le format du message est incorrect :", data.message);
+    }
+};
+
+document.querySelector('#chat-message-input').focus();
+document.querySelector('#chat-message-input').onkeyup = function(e) {
+    if (e.keyCode === 13) {  // Envoie le message quand "Enter" est pressé
+        document.querySelector('#chat-message-submit').click();
+    }
+};
+
+document.querySelector('#chat-message-submit').onclick = function(e) {
+    const messageInputDom = document.querySelector('#chat-message-input');
+    const message = messageInputDom.value;
+
+    // Envoyer le message sans réafficher le nom de l'utilisateur à chaque fois
+    if (message.trim() !== '') {
+        chatSocket.send(JSON.stringify({
+            'message':  message  // Inclut le nom d'utilisateur avec le message
+        }));
+        messageInputDom.value = '';  // Vider le champ après l'envoi
+    }
+};
+
+</script>
 
 </body>
 </html>

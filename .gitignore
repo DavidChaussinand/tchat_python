@@ -1,0 +1,25 @@
+# Ignore les fichiers de configuration d'environnement
+.env
+
+# Ignore les fichiers générés automatiquement par Python
+__pycache__/
+*.py[cod]
+
+# Ignore les fichiers de migration
+*/migrations/
+
+# Ignore les fichiers de base de données
+*.sqlite3
+
+# Ignore les fichiers et dossiers spécifiques à votre IDE (par exemple, PyCharm, VS Code)
+.vscode/
+.idea/
+*.swp
+
+# Ignore les fichiers statiques générés lors de la compilation
+staticfiles/
+media/
+
+# Ignore les fichiers ou logs de tests
+*.log
+coverage/

@@ -83,7 +83,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',  # Utiliser le backend MySQL
         'NAME': 'blog_django',  # Remplace par le nom de ta base de données
         'USER': 'root',  # Nom d'utilisateur MySQL par défaut pour XAMPP est 'root'
-        'PASSWORD': '1234',  # Par défaut, il n'y a pas de mot de passe pour 'root' sur XAMPP. Laisse vide si c'est le cas.
+        'PASSWORD': '',  # Par défaut, il n'y a pas de mot de passe pour 'root' sur XAMPP. Laisse vide si c'est le cas.
         'HOST': 'localhost',  # MySQL est en local sur XAMPP
         'PORT': '3306',  # Le port par défaut pour MySQL est 3306
     }
@@ -125,7 +125,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

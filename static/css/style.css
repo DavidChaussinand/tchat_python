@@ -1,0 +1,64 @@
+/* Normalisation pour le chat privé et général */
+#chat-log, #private-chat-log {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Normalisation pour chaque groupe de messages */
+.message-group, .private-chat-message-group {
+    margin: 0;
+    padding: 5px 0;  /* Ajustement du padding */
+    box-sizing: border-box;
+}
+
+/* Style pour la zone de chat */
+#chat-log, #private-chat-log {
+    width: 100%; /* Ajustement pour s'adapter à la largeur de son conteneur */
+    height: 400px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    overflow-y: scroll;
+   
+    margin-bottom: 10px;
+}
+
+/* Style pour chaque groupe de messages par utilisateur */
+.message-group, .private-chat-message-group {
+    margin-bottom: 8px;
+    padding: 0px; /* Ajustement du padding pour réduire l'espacement */
+}
+
+/* Couleur alternée pour les utilisateurs */
+.message-group:nth-child(even), .private-chat-message-group:nth-child(even) {
+    background-color: #e6f7ff;
+}
+
+.message-group:nth-child(odd), .private-chat-message-group:nth-child(odd) {
+    background-color: #fef9e7;
+}
+
+/* Style des messages et des noms d'utilisateur */
+.username, .private-chat-username {
+    font-weight: bold;
+    color: #2b2b2b;
+    margin-bottom: 2px;  /* Moins d'espace sous le nom d'utilisateur */
+}
+
+.message .content, .private-chat-message .content {
+    margin-left: 10px;
+    color: #4a4a4a;
+    padding: 5px;  /* Ajouter un léger padding pour le contenu du message */
+}
+
+/* Réduction du padding global */
+.username, .private-chat-username {
+    font-weight: 900;
+    color: black;
+    padding: 0px;  /* Supprimer tout padding supplémentaire autour du nom */
+    margin: 0px;  /* Supprimer les marges supplémentaires */
+}
